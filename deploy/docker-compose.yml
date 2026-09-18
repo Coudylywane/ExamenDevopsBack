@@ -1,0 +1,26 @@
+# Compose de déploiement du backend en production.
+# Positionné sur le serveur par la GitHub Action (dossier /opt/prod/apps/backend).
+# L'image est injectée via le fichier .env (Image=ghcr.io/<owner>/backend:latest).
+services:
+  backend:
+    image: ${IMAGE}
+    restart: unless-stopped
+    env_file:
+      - /opt/prod/config/infra.env
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      PORT: "3000"
+    networks:
+      - prod-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  prod-net:
+    external: true
+    name: prod-net
